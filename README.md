@@ -7,3 +7,8 @@ python -m venv venv
 \venv\Scripts\activate
 pip install -r req.txt
 ```
+### Test
+- Test mediapipe with web-camera
+```bash
+python app/example_mediapipe.py
+```
