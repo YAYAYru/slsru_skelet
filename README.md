@@ -12,3 +12,5 @@ pip install -r req.txt
 ```bash
 python app/example_mediapipe.py
 ```
+### DVC
+- Get Started: Data Versioning [dvc.ru](https://dvc.org/doc/start/data-and-model-versioning)
