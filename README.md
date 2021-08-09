@@ -14,3 +14,4 @@ python app/mediapipe_with_camera.py
 ```
 ### DVC
 - Get Started: Data Versioning [dvc.ru](https://dvc.org/doc/start/data-and-model-versioning)
+
