@@ -1,6 +1,6 @@
 # slru_skelet
 
-### For init
+### init
 - Create env and install pip on Windows 10:
 ```bash
 python -m venv venv
