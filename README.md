@@ -10,7 +10,7 @@ pip install -r req.txt
 ### Test
 - Test mediapipe with web-camera
 ```bash
-python app/example_mediapipe.py
+python app/mediapipe_with_camera.py
 ```
 ### DVC
 - Get Started: Data Versioning [dvc.ru](https://dvc.org/doc/start/data-and-model-versioning)
