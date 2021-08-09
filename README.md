@@ -12,6 +12,7 @@ pip install -r req.txt
 ```bash
 python app/mediapipe_with_camera.py
 ```
-### DVC
-- Get Started: Data Versioning [dvc.ru](https://dvc.org/doc/start/data-and-model-versioning)
-
+- Test mediapipe read from videofile to csv and show video
+```bash
+mediapipe_video2skelet.py
+```
