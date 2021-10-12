@@ -1,5 +1,6 @@
 # mediapipe v0.8
-from slsru_skelet.skelet_model import SkeletModel
+#from slsru_skelet.skelet_model import SkeletModel
+from skelet_model import SkeletModel
 import mediapipe as mp
 import cv2
 import numpy as np

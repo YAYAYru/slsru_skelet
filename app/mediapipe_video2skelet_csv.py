@@ -2,7 +2,7 @@ import numpy as np
 import cv2 as cv
 import sys
 sys.path.append('../slsru_skelet')
-from slsru_skelet.skelet_mediapipe import MediapipeModel_v08
+from view_module import MediapipeModel_v08
 
 data_folder = "data/video/"
 # filename = data_folder + "S1540022.mp4"
