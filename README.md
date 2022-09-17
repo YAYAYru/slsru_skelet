@@ -7,6 +7,13 @@ python -m venv venv
 venv\Scripts\activate
 pip install -r req.txt
 ```
+- Create env and install pip on ubuntu 20.04:
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install -r req.txt
+```
+
 ### Test
 - Test mediapipe with web-camera
 ```bash

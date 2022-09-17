@@ -1,6 +1,5 @@
 # mediapipe v0.8
-#from slsru_skelet.skelet_model import SkeletModel
-from skelet_model import SkeletModel
+from slsru_skelet.skelet_model import SkeletModel
 import mediapipe as mp
 import cv2
 import numpy as np
@@ -24,13 +23,21 @@ def random_sigmoid(x):
     return clip(rs)
 
 
-def draw_point(points, img, width, height):
+def draw_point(points, img, width, height, text=0):
     i = 0
     for f in range(points.shape[0]):
         i += 1
         if i == 1:
             if not np.isnan(points[f]):
                 cv2.circle(img, (int(points[f] * width), int(points[f + 1] * height)), 1, (255, 255, 255), -1)
+                if text:
+                    font = cv2.FONT_HERSHEY_SIMPLEX
+                    org = (int(points[f] * width), int(points[f + 1] * height))
+                    fontScale = 0.5
+                    color = (255, 255, 0)
+                    thickness = 1
+                    cv2.putText(img, str(f), org, font, fontScale, color, thickness, cv2.LINE_AA)
+
             i += 1
         if i == 5:
             i = 0
@@ -125,7 +132,7 @@ class MediapipeModel_v08(SkeletModel):
                         mp_drawing.draw_landmarks(
                             image=self.annotated_image,
                             landmark_list=face_landmarks,
-                            connections=self.mp_face_mesh.FACE_CONNECTIONS,
+                            connections=self.mp_face_mesh.FACEMESH_TESSELATION,
                             landmark_drawing_spec=drawing_spec,
                             connection_drawing_spec=drawing_spec,
                         )
@@ -143,7 +150,7 @@ class MediapipeModel_v08(SkeletModel):
                     mp_drawing.draw_landmarks(
                         self.annotated_image,
                         self.results.face_landmarks,
-                        self.mp_holistic.FACE_CONNECTIONS,
+                        self.mp_holistic.FACEMESH_TESSELATION,
                     )
                     mp_drawing.draw_landmarks(
                         self.annotated_image,
@@ -243,7 +250,7 @@ class MediapipeModel_v08(SkeletModel):
                             mp_drawing.draw_landmarks(
                                 image=black_img,
                                 landmark_list=face_landmarks,
-                                connections=self.mp_face_mesh.FACE_CONNECTIONS,
+                                connections=self.mp_face_mesh.FACEMESH_TESSELATION,
                                 landmark_drawing_spec=drawing_spec,
                                 connection_drawing_spec=drawing_spec,
                             )
@@ -251,7 +258,7 @@ class MediapipeModel_v08(SkeletModel):
                         mp_drawing.draw_landmarks(
                             black_img,
                             self.results.face_landmarks,
-                            self.mp_holistic.FACE_CONNECTIONS,
+                            self.mp_holistic.FACEMESH_TESSELATION,
                         )
                         mp_drawing.draw_landmarks(
                             black_img,
@@ -290,7 +297,7 @@ class MediapipeModel_v08(SkeletModel):
                             mp_drawing.draw_landmarks(
                                 black_img,
                                 self.points[i][0],
-                                self.mp_holistic.FACE_CONNECTIONS,
+                                self.mp_holistic.FACEMESH_TESSELATION,
                             )
                             mp_drawing.draw_landmarks(
                                 black_img,
@@ -337,7 +344,7 @@ class MediapipeModel_v08(SkeletModel):
                             mp_drawing.draw_landmarks(
                                 image,
                                 self.points[i][0],
-                                self.mp_holistic.FACE_CONNECTIONS,
+                                self.mp_holistic.FACEMESH_TESSELATION,
                             )
                             mp_drawing.draw_landmarks(
                                 image,
@@ -656,5 +663,92 @@ class MediapipeModel_v08(SkeletModel):
         data = np.load(npy_filename_path, allow_pickle=True)
         return data
 
-    def from_csv(self, csv_filename_path):
-        print("Читать csv")
+    def __missing_proportion(self, a, value_step, missing_step):
+        o = []
+        for i in range(value_step):
+            o.append(a[i::value_step])
+        o = np.array(o)
+        o1 = []
+        for i, n in enumerate(o):
+            o1.append(n[::missing_step])
+        o1 = np.array(o1)
+        o1 = o1.reshape(int(len(a)/missing_step), order='F')
+        return o1
+
+    def __select_by_index_in_array(self, matrix, selects, n=4):
+        selects_xyzp = []
+        for n1 in selects:
+            for n2 in range(n):
+                selects_xyzp.append(n1*n+n2)
+        return np.array([n[selects_xyzp] for n in matrix])
+    
+    def __select_landmarks_face(self):    
+        dict_landmarks = {
+            "nose":[8,168,6,197,195,5,4,1,20,242,141,94,370,462,250],
+            "mouth_inner":[13,82,81,80,191,78,95,88,178,87,14,317,402,318,324,308,415,310,311,312],
+            "mouth_outer":[0,37,39,40,185,61,146,91,181,84,17,314,405,321,375,291,409,270,269,267],
+
+            "eyebrow_high_right":[336,296,334,293,300],
+            #"eyebrow_low_right":[285,295,282,283,276],
+            "eyebrow_high_left":[107,66,105,63,70],
+            #"eyebrow_low_left":[55,65,52,53,46],
+            "eye_inner_right":[386,385,384,398,362,382,381,380,374,373,390,249,263,466,388,387],
+            #"eye_inner_right":[386,385,384,398,382,381,380,374,373,390,249,466,388,387],
+            #"eye_outer_right":[257,258,286,414,463,341,256,252,253,254,339,255,359,467,260,259],
+            "eye_inner_left": [159,160,161,246,33,7,163,144,145,153,154,155,133,173,157,158],
+            #"eye_inner_left": [159,160,161,246,7,163,144,145,153,154,155,173,157,158],
+            #"eye_outer_left": [27,29,30,247,130,25,110,24,23,22,26,112,243,190,56,28],
+            "face": [10,109,67,103,54,21,162,127,234,93,132,58,172,136,150,149,176,148,152,377,400,378,379,365,397,288,361,323,454,356,389,251,284,332,297,338]
+        }
+        landmarks = []
+        for n in dict_landmarks.keys():
+            print("n", n)
+            landmarks +=dict_landmarks[n]
+
+        return landmarks
+
+    
+    def from_csv(self, csv_path):
+        type_show = "csv"
+        if type_show == "csv":
+            if csv_path is None:
+                raise ValueError("УКАЖИТЕ ПУТЬ К CSV")
+            mp_drawing = mp.solutions.drawing_utils
+            df = pd.read_csv(csv_path)
+            if self.output_type == "full":
+                width = int(df["resolution_width"][0])
+                height = int(df["resolution_height"][0])
+                rows = int(df.shape[0])
+                fps = df["fps"][0]
+                face_p = df.loc[0:rows, "face_x0":"face_p467"].values
+                select_landmarks = self.__select_landmarks_face()
+                face_p = self.__select_by_index_in_array(face_p,select_landmarks)
+                #face_p = np.array([ n[:4*0] for n in face_p])
+                #face_p = np.array([self.__missing_proportion(n,4,12) for n in face_p])
+                pose_p = df.loc[0:rows, "pose_x11":"pose_p16"].values
+                lhand_p = df.loc[0:rows, "lhand_x0":"lhand_p20"].values
+                rhand_p = df.loc[0:rows, "rhand_x0":"rhand_p20"].values
+                points_arr = [face_p, pose_p, lhand_p, rhand_p]
+                print("face_p.shape", face_p.shape)
+                print("pose_p.shape", pose_p.shape)
+                print("lhand_p.shape", lhand_p.shape)
+                print("rhand_p.shape", rhand_p.shape)
+                self.mp_holistic = mp.solutions.holistic
+                if self.output_type == "full":
+                    i = 0
+                    for i in range(rows):
+                        black = np.zeros((height, width, 3))
+                        draw_point(points_arr[0][i], black, width, height)
+                        draw_point(points_arr[1][i], black, width, height)
+                        draw_point(points_arr[2][i], black, width, height)
+                        draw_point(points_arr[3][i], black, width, height)
+                        # black = cv2.resize(black, (400,400))
+                        black = cv2.resize(black, (1280, 720))
+                        if self.where_left == "right":
+                            cv2.imshow("black_full", cv2.flip(black, 1))
+                        if self.where_left == "left":
+                            cv2.imshow("black_full", black)
+                        key = cv2.waitKey(1)
+                        time.sleep(1 / fps)
+                        if key == ord("q"):
+                            break
