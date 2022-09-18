@@ -2,3 +2,4 @@ venv
 .idea
 slsru_skelet/__pycache__/
 desktop.ini
+cli/__pycache__
