@@ -1,6 +1,6 @@
 # mediapipe v0.8
 #from slsru_skelet.skelet_model import SkeletModel
-from skelet_model import SkeletModel
+from .skelet_model import SkeletModel
 import mediapipe as mp
 import cv2
 import numpy as np
@@ -35,10 +35,38 @@ def draw_point(points, img, width, height):
         if i == 5:
             i = 0
 
+#BUG can not exit from window
+def camera():
+    cap = cv2.VideoCapture(0)
+
+    mpHands = mp.solutions.hands
+    hands = mpHands.Hands()
+    mpDraw = mp.solutions.drawing_utils
+
+    pTime = 0
+    cTime = 0
+    while True:
+        success, img = cap.read()
+        imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        results = hands.process(imgRGB)
+        print(results.multi_hand_landmarks)
+
+        if results.multi_hand_landmarks:
+            for handLms in results.multi_hand_landmarks:
+                mpDraw.draw_landmarks(img, handLms, mpHands.HAND_CONNECTIONS)
+
+        cTime = time.time()
+        fps = 1 / (cTime - pTime)
+        pTime = cTime
+
+        cv2.putText(img, str(int(fps)), (10, 70), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 255), 3)
+
+        cv2.imshow("Image", img)
+        cv2.waitKey(1)
 
 class MediapipeModel_v08(SkeletModel):
-    def __init__(self, filename_or_camera, fps, screen_resolution, output_type="pose", where_left="right"):
-        super().__init__(filename_or_camera, fps, screen_resolution)
+    def __init__(self, filename_or_camera, output_type="pose", where_left="right"):
+        super().__init__(filename_or_camera)
         self.output_name = None
         self.output_type = output_type
         self.frames_c = 0
@@ -46,6 +74,10 @@ class MediapipeModel_v08(SkeletModel):
         self.processing_ = False
         if where_left not in ["left", "right"]:
             raise ValueError("where_left not in [left,right]")
+
+
+
+
 
     def processing(self):
         self.processing_ = True
@@ -125,7 +157,7 @@ class MediapipeModel_v08(SkeletModel):
                         mp_drawing.draw_landmarks(
                             image=self.annotated_image,
                             landmark_list=face_landmarks,
-                            connections=self.mp_face_mesh.FACE_CONNECTIONS,
+                            connections=self.mp_face_mesh.FACEMESH_TESSELATION,
                             landmark_drawing_spec=drawing_spec,
                             connection_drawing_spec=drawing_spec,
                         )
@@ -143,7 +175,7 @@ class MediapipeModel_v08(SkeletModel):
                     mp_drawing.draw_landmarks(
                         self.annotated_image,
                         self.results.face_landmarks,
-                        self.mp_holistic.FACE_CONNECTIONS,
+                        self.mp_holistic.FACEMESH_TESSELATION,
                     )
                     mp_drawing.draw_landmarks(
                         self.annotated_image,
@@ -163,6 +195,36 @@ class MediapipeModel_v08(SkeletModel):
 
                     self.points = [
                         self.results.face_landmarks,
+                        self.results.left_hand_landmarks,
+                        self.results.right_hand_landmarks,
+                        self.results.pose_landmarks,
+                    ]
+            if self.output_type == "hands+pose":
+                self.mp_holistic = mp.solutions.holistic
+                with self.mp_holistic.Holistic(static_image_mode=True) as holistic:
+                    image = cv2.imread(self.filename_or_camera)
+                    self.image_height, self.image_width, _ = image.shape
+                    # Convert the BGR image to RGB before processing.
+                    self.results = holistic.process(
+                        cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                    )
+                    mp_drawing.draw_landmarks(
+                        self.annotated_image,
+                        self.results.left_hand_landmarks,
+                        self.mp_holistic.HAND_CONNECTIONS,
+                    )
+                    mp_drawing.draw_landmarks(
+                        self.annotated_image,
+                        self.results.right_hand_landmarks,
+                        self.mp_holistic.HAND_CONNECTIONS,
+                    )
+                    mp_drawing.draw_landmarks(
+                        self.annotated_image,
+                        self.results.pose_landmarks,
+                        self.mp_holistic.POSE_CONNECTIONS,
+                    )
+
+                    self.points = [
                         self.results.left_hand_landmarks,
                         self.results.right_hand_landmarks,
                         self.results.pose_landmarks,
@@ -215,6 +277,14 @@ class MediapipeModel_v08(SkeletModel):
                                 self.results.pose_landmarks,
                             ]
                         )
+                    if self.output_type == "hands+pose":
+                        self.points.append(
+                            [
+                                self.results.left_hand_landmarks,
+                                self.results.right_hand_landmarks,
+                                self.results.pose_landmarks,
+                            ]
+                        )
 
     def show(self, mode=0, type_show="OpenCV", csv_path=None):
         if self.processing_ == False:
@@ -243,7 +313,7 @@ class MediapipeModel_v08(SkeletModel):
                             mp_drawing.draw_landmarks(
                                 image=black_img,
                                 landmark_list=face_landmarks,
-                                connections=self.mp_face_mesh.FACE_CONNECTIONS,
+                                connections=self.mp_face_mesh.FACEMESH_TESSELATION,
                                 landmark_drawing_spec=drawing_spec,
                                 connection_drawing_spec=drawing_spec,
                             )
@@ -251,8 +321,24 @@ class MediapipeModel_v08(SkeletModel):
                         mp_drawing.draw_landmarks(
                             black_img,
                             self.results.face_landmarks,
-                            self.mp_holistic.FACE_CONNECTIONS,
+                            self.mp_holistic.FACEMESH_TESSELATION,
                         )
+                        mp_drawing.draw_landmarks(
+                            black_img,
+                            self.results.left_hand_landmarks,
+                            self.mp_holistic.HAND_CONNECTIONS,
+                        )
+                        mp_drawing.draw_landmarks(
+                            black_img,
+                            self.results.right_hand_landmarks,
+                            self.mp_holistic.HAND_CONNECTIONS,
+                        )
+                        mp_drawing.draw_landmarks(
+                            black_img,
+                            self.results.pose_landmarks,
+                            self.mp_holistic.POSE_CONNECTIONS,
+                        )
+                    if self.output_type == "hands+pose":
                         mp_drawing.draw_landmarks(
                             black_img,
                             self.results.left_hand_landmarks,
@@ -290,8 +376,38 @@ class MediapipeModel_v08(SkeletModel):
                             mp_drawing.draw_landmarks(
                                 black_img,
                                 self.points[i][0],
-                                self.mp_holistic.FACE_CONNECTIONS,
+                                self.mp_holistic.FACEMESH_TESSELATION,
                             )
+                            mp_drawing.draw_landmarks(
+                                black_img,
+
+                                self.points[i][1],
+                                self.mp_holistic.HAND_CONNECTIONS,
+                            )
+                            mp_drawing.draw_landmarks(
+                                black_img,
+
+                                self.points[i][2],
+                                self.mp_holistic.HAND_CONNECTIONS,
+                            )
+                            mp_drawing.draw_landmarks(
+                                black_img,
+
+                                self.points[i][3],
+                                self.mp_holistic.POSE_CONNECTIONS,
+                            )
+                            i += 1
+                            black_img = cv2.resize(black_img, (1280, 720))
+                            if self.where_left == "right":
+                                cv2.imshow("black_full", cv2.flip(black_img, 1))
+                            if self.where_left == "left":
+                                cv2.imshow("black_full", black_img)
+                            cv2.waitKey(1)
+                            time.sleep(1 / self.fps)
+                    if self.output_type == "hands+pose":
+                        dlit = len(self.points)
+                        i = 0
+                        for black_img in black:
                             mp_drawing.draw_landmarks(
                                 black_img,
 
@@ -337,7 +453,7 @@ class MediapipeModel_v08(SkeletModel):
                             mp_drawing.draw_landmarks(
                                 image,
                                 self.points[i][0],
-                                self.mp_holistic.FACE_CONNECTIONS,
+                                self.mp_holistic.FACEMESH_TESSELATION,
                             )
                             mp_drawing.draw_landmarks(
                                 image,
@@ -355,6 +471,46 @@ class MediapipeModel_v08(SkeletModel):
                                 image,
 
                                 self.points[i][3],
+                                self.mp_holistic.POSE_CONNECTIONS,
+                            )
+
+                            i += 1
+
+                            image = cv2.resize(image, (1280, 720))
+                            if self.where_left == "right":
+                                cv2.imshow("color_full", cv2.flip(image, 1))
+                            if self.where_left == "left":
+                                cv2.imshow("color_full", image)
+
+                            cv2.waitKey(1)
+                            time.sleep(1 / 30)
+                    if self.output_type == "hands+pose":
+                        dlit = len(self.points)
+                        i = 0
+
+                        while cap.isOpened():
+                            success, image = cap.read()
+                            if not success:
+                                break
+                            mode_c = 0
+                            if self.where_left == "right":
+                                image = cv2.flip(image, 1)
+                            mp_drawing.draw_landmarks(
+                                image,
+
+                                self.points[i][0],
+                                self.mp_holistic.HAND_CONNECTIONS,
+                            )
+                            mp_drawing.draw_landmarks(
+                                image,
+
+                                self.points[i][1],
+                                self.mp_holistic.HAND_CONNECTIONS,
+                            )
+                            mp_drawing.draw_landmarks(
+                                image,
+
+                                self.points[i][2],
                                 self.mp_holistic.POSE_CONNECTIONS,
                             )
 
@@ -399,6 +555,38 @@ class MediapipeModel_v08(SkeletModel):
                         draw_point(points_arr[1][i], black, width, height)
                         draw_point(points_arr[2][i], black, width, height)
                         draw_point(points_arr[3][i], black, width, height)
+                        # black = cv2.resize(black, (400,400))
+                        black = cv2.resize(black, (1280, 720))
+                        if self.where_left == "right":
+                            cv2.imshow("black_full", cv2.flip(black, 1))
+                        if self.where_left == "left":
+                            cv2.imshow("black_full", black)
+                        key = cv2.waitKey(1)
+                        time.sleep(1 / fps)
+                        if key == ord("q"):
+                            break
+            if self.output_type == "hands+pose":
+                width = int(df["resolution_width"][0])
+                height = int(df["resolution_height"][0])
+                rows = int(df.shape[0])
+                fps = df["fps"][0]
+                pose_p = df.loc[0:rows, "pose_x0":"pose_p31"].values
+                lhand_p = df.loc[0:rows, "lhand_x0":"lhand_p20"].values
+                rhand_p = df.loc[0:rows, "rhand_x0":"rhand_p20"].values
+                points_arr = [pose_p, lhand_p, rhand_p]
+                print(face_p.shape)
+                print(pose_p.shape)
+                print(lhand_p.shape)
+                print(rhand_p.shape)
+                self.mp_holistic = mp.solutions.holistic
+                if self.output_type == "hands+pose":
+                    i = 0
+                    for i in range(rows):
+
+                        black = np.zeros((height, width, 3))
+                        draw_point(points_arr[0][i], black, width, height)
+                        draw_point(points_arr[1][i], black, width, height)
+                        draw_point(points_arr[2][i], black, width, height)
                         # black = cv2.resize(black, (400,400))
                         black = cv2.resize(black, (1280, 720))
                         if self.where_left == "right":
@@ -640,6 +828,91 @@ class MediapipeModel_v08(SkeletModel):
                                 + rh_keypoints_flatten
                                 + lh_keypoints_flatten
                                 + face_keypoints_flatten
+                        )
+
+                    if not iswriten:
+                        output_arr = [int(i)] + [self.image_width] + [self.image_height] + [
+                            self.fps] + keypoints_flatten
+                        iswriten = True
+                    else:
+                        output_arr = [int(i)] + ["", "", ""] + keypoints_flatten
+                    df.loc[int(i)] = output_arr
+                    i += 1
+                df.to_csv(csv_filename_path, index=False)
+
+            if self.output_type == "hands+pose":
+                left_hand = [lh[0] for lh in self.points]
+                right_hand = [rh[1] for rh in self.points]
+                pose = [p[2] for p in self.points]
+
+                points = []
+                for i in range(len(right_hand)):
+                    points.append([pose[int(i)], right_hand[int(i)], left_hand[int(i)]])
+                rh_labels = [[f"rhand_x{i}", f"rhand_y{i}", f"rhand_z{i}", f"rhand_p{i}"] for i in range(21)]
+                lh_labels = [[f"lhand_x{i}", f"lhand_y{i}", f"lhand_z{i}", f"lhand_p{i}"] for i in range(21)]
+
+                poses = [[f"pose_x{i}", f"pose_y{i}", f"pose_z{i}", f"pose_p{i}"] for i in range(33)]
+
+                full_labels = poses + lh_labels + rh_labels
+                flat = [x for sublist in full_labels for x in sublist]
+                fieldnames = ["frame", "resolution_width", "resolution_height", "fps"]
+                fieldnames = fieldnames + flat
+                df = pd.DataFrame(columns=fieldnames)
+                iswriten = False
+                i = 0
+
+                for frame in points:
+
+                    if frame[0] is None:
+                        pose_keypoints_flatten = [None for i in range(132)]
+                    else:
+                        pose_keypoints = [x for x in frame[0].landmark]
+                        pose_keypoints = [
+                            [round(x.x, 5), round(x.y, 5), round(x.z, 5), round(random_sigmoid(x.visibility), 5)] for x
+                            in pose_keypoints]
+                        pose_keypoints_flatten = [
+                            x for sublist in pose_keypoints for x in sublist
+                        ]
+
+                    if frame[1] is None:
+                        rh_keypoints_flatten = [None for i in range(84)]
+                    else:
+                        rh_keypoints = [x for x in frame[1].landmark]
+                        rh_keypoints = [
+                            [round(x.x, 5), round(x.y, 5), round(x.z, 5), round(random_sigmoid(x.visibility), 5)] for x
+                            in rh_keypoints]
+                        rh_keypoints_flatten = [
+                            x for sublist in rh_keypoints for x in sublist
+                        ]
+
+                    if frame[2] is None:
+                        lh_keypoints_flatten = [None for i in range(84)]
+                    else:
+                        lh_keypoints = [x for x in frame[2].landmark]
+                        lh_keypoints = [
+                            [round(x.x, 5), round(x.y, 5), round(x.z, 5), round(random_sigmoid(x.visibility), 5)] for x
+                            in lh_keypoints]
+                        lh_keypoints_flatten = [
+                            x for sublist in lh_keypoints for x in sublist
+                        ]
+
+                    if (
+                            frame[0] is None
+                            and frame[1] is None
+                            and frame[2] is None
+                    ):
+                        i += 1
+                        print(i)
+                        continue
+                    if (
+                            frame[0] is not None
+                            or frame[1] is not None
+                            or frame[2] is not None
+                    ):
+                        keypoints_flatten = (
+                                pose_keypoints_flatten
+                                + rh_keypoints_flatten
+                                + lh_keypoints_flatten
                         )
 
                     if not iswriten:
