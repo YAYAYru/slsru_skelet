@@ -2,3 +2,4 @@ mediapipe
 opencv-python
 pandas
 click
+git+https://github.com/YAYAYru/slsru_skelet
