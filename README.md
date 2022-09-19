@@ -7,6 +7,7 @@ python -m venv venv
 venv\Scripts\activate # for Windows
 source venv\bin\activate # for Linux or Mac
 pip install -r req.txt
+cd cli
 ```
 ### Test
 - Test mediapipe with web-camera
