@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name="slsru_skelet",
-        version="0.1.1",
+        version="0.1.3",
         description="Work with skeletal model",
         author="Alexey Prikhodko",
         packages=["slsru_skelet"],
