@@ -10,10 +10,8 @@ import numpy as np
 
 
 class SkeletModel(ABC):
-    def __init__(self, filename_or_camera, fps, screen_resolution):
+    def __init__(self, filename_or_camera):
         self.filename_or_camera = filename_or_camera
-        self.fps = fps
-        self.screen_resolution = screen_resolution
 
     @abstractmethod
     def show(self, mode=0, type_show="OpenCV"):
