@@ -19,6 +19,10 @@ python app/mediapipe_with_camera.py
 mediapipe_video2skelet.py
 ```
 ### Feature
+- Transform skelet by fps
+```bash
+python3 trans_by_fps.py --paths_from_folder_csv=/home/yayay/yayay/dataset/0_sl_dataset/sl_word_sentence/meta/w1006_s142_skelet/*.csv --path_to_folder_csv=/home/yayay/yayay/dataset/0_sl_dataset/sl_word_sentence/meta/w1006_s142_skelet_30fps/ --to_fps=30 --feature_names="hands21_pose25_xyz"
+```
 
 - Transform all csv format file to hands+pose csv `python3 cli/all2handspose.py source_folder trans_folder`, ex: `python cli/all2handspose.py /home/yayay/yayay/dataset/0_sl_dataset/sl_sentence/meta/csv_slsru_skelet_v0_1_0/20210429_DianaB /home/yayay/yayay/dataset/0_sl_dataset/sl_word_sentence/meta/csv_slsru_skelet_v0_1_0_hands_pose/20210429_DianaB`
 - Transform video to skelet in format csv  `python3 cli/video2skelet.py, example: 
@@ -35,3 +39,7 @@ python3 video2skelet.py
 python3 video2skelet.py --from_folder=data/video/*.mp4 --to_folder=data/csv # default hands+pose
 ```  
 Если нужно все части скелета, ставить параметр --skelet_part=full
+- Tranform skeletal model file by FPS in folder:
+```bash
+trans_by_fps.py --paths_from_folder=/home/yayay/yayay/dataset/0_sl_dataset/sl_word_sentence/meta/w1006_s142_skelet/*.csv --path_to_folder=/home/yayay/yayay/dataset/0_sl_dataset/sl_word_sentence/meta/w1006_s142_skelet_30fps
+```
