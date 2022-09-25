@@ -43,3 +43,7 @@ python3 video2skelet.py --from_folder=data/video/*.mp4 --to_folder=data/csv # de
 ```bash
 trans_by_fps.py --paths_from_folder=/home/yayay/yayay/dataset/0_sl_dataset/sl_word_sentence/meta/w1006_s142_skelet/*.csv --path_to_folder=/home/yayay/yayay/dataset/0_sl_dataset/sl_word_sentence/meta/w1006_s142_skelet_30fps
 ```
+- Visual test interpolation from fps to fps
+```bash
+python3 visual_test_interpolation.py --path_from_csv=/home/yayay/yayay/dataset/0_sl_dataset/sl_word_sentence/meta/w1006_s142_skelet/316345_3_1.mp4.csv --path_to_csv=/home/yayay/yayay/dataset/0_sl_dataset/sl_word_sentence/meta/w1006_s142_skelet_30fps/316345_3_1.mp4.csv
+```
