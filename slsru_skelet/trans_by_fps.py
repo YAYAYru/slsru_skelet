@@ -12,7 +12,7 @@ from slsru_skelet import load
 
 def folder_skelet2skelet_folder(paths_from_folder, path_to_folder, to_fps, feature_names):
     list_path = glob.glob(paths_from_folder)
-    for path in list_path[:1]:
+    for path in list_path:
         print("from", path)
         csv_skelet2skelet_csv(path, path_to_folder+os.path.split(path)[-1], to_fps, feature_names)
         print("to", path_to_folder+os.path.split(path)[-1])
@@ -82,14 +82,19 @@ def pose_format_interpolation_XYZ(np_data, np_conf, fps, to_fps):
     for i, n in enumerate(np_X):
         for j, _ in enumerate(n):
             data[i,0,j] = [np_X[i,j], np_Y[i,j], np_Z[i,j]]
-            conf[i,0,j] = np_conf[i,j]   
-    # print("data", data)
+            conf[i,0,j] = np_conf[i,j]  
+    #i=50 
+    #print("data.shape", data.shape)
+    #print("data[i]", data[i])
+    #print("conf.shape", conf.shape)
+    #print("conf[i]", conf[i])
     p = pb.NumPyPoseBody(int(fps), data, conf)
 
     # print("pose_body_shape", p.data.shape)
 
-    p = p.interpolate(new_fps=to_fps)
-    print("pose_body_shape", p.data.shape)
+    p = p.interpolate(new_fps=to_fps,kind="linear")
+    #print("p.data.shape", p.data.shape)
+    #print("p.data.shape", p.data[i])
 
     list_p_data = []
     for n in p.data:
@@ -104,6 +109,8 @@ def pose_format_interpolation_XYZ(np_data, np_conf, fps, to_fps):
     np_p_data = np.array(list_p_data)
     np_p_data = np.around(np_p_data, decimals=5)
     print("np_p_data.shape", np_p_data.shape)
+    #print("np_p_data.shape", np_p_data[i])    
+
     return np_p_data
 
 def pose_format_interpolation_XY(np_data, np_conf, fps, to_fps):
