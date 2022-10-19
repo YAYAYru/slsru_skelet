@@ -598,7 +598,7 @@ class MediapipeModel_v08(SkeletModel):
                         if key == ord("q"):
                             break
         cv2.destroyAllWindows()
-
+    # BUG
     def to_npy(self, npy_filename_path):
         if self.processing_ == False:
             self.processing()
@@ -636,7 +636,7 @@ class MediapipeModel_v08(SkeletModel):
             video_data = np.array(video_data)
             np.save(npy_filename_path, video_data)
 
-    def to_csv(self, csv_filename_path):
+    def to_df(self):
         if self.processing_ == False:
             self.processing()
         self.fps = round(self.fps, 5)
@@ -680,7 +680,7 @@ class MediapipeModel_v08(SkeletModel):
                         output_arr = [int(i)] + ["", "", ""] + keypoints_flatten
                     df.loc[int(i)] = output_arr
                     i += 1
-                df.to_csv(csv_filename_path, index=False)
+                return df
             if self.output_type == "hands":
                 left_hand = [lh[0] for lh in self.points]
                 right_hand = [rh[1] for rh in self.points]
@@ -738,7 +738,7 @@ class MediapipeModel_v08(SkeletModel):
                         output_arr = [int(i)] + ["", "", ""] + keypoints_flatten
                     df.loc[int(i)] = output_arr
                     i += 1
-                df.to_csv(csv_filename_path, index=False)
+                return df
             if self.output_type == "full":
                 face = [f[0] for f in self.points]
                 left_hand = [lh[1] for lh in self.points]
@@ -838,7 +838,7 @@ class MediapipeModel_v08(SkeletModel):
                         output_arr = [int(i)] + ["", "", ""] + keypoints_flatten
                     df.loc[int(i)] = output_arr
                     i += 1
-                df.to_csv(csv_filename_path, index=False)
+                return df
 
             if self.output_type == "hands+pose":
                 left_hand = [lh[0] for lh in self.points]
@@ -923,7 +923,11 @@ class MediapipeModel_v08(SkeletModel):
                         output_arr = [int(i)] + ["", "", ""] + keypoints_flatten
                     df.loc[int(i)] = output_arr
                     i += 1
-                df.to_csv(csv_filename_path, index=False)
+                return df        
+
+    def to_csv(self, csv_filename_path):
+        df = self.to_df()
+        df.to_csv(csv_filename_path, index=False)
 
     def from_npy(self, npy_filename_path):
         data = np.load(npy_filename_path, allow_pickle=True)
