@@ -35,3 +35,10 @@ python3 video2skelet.py
 python3 video2skelet.py --from_folder=data/video/*.mp4 --to_folder=data/csv # default hands+pose
 ```  
 Если нужно все части скелета, ставить параметр --skelet_part=full
+
+- **show_from_csv**
+    - `--skelet_part=hands+pose`
+    - `--hand_mirror=left`
+```bash
+python3 cli/show_from_csv.py --path_csv=data/csv/12_s10020_9_1.mp4.csv 
+```

@@ -1,7 +1,10 @@
 import cv2
 import math
+import time
 from dataclasses import dataclass
 import numpy as np
+import pandas as pd
+import mediapipe as mp
 
 @dataclass
 class ViewOpenCV:
@@ -78,3 +81,90 @@ class ViewOpenCV:
             cv2.imshow('OpenCV Feed', frame)
             if cv2.waitKey(10) & 0xFF == ord('q'):
                 break
+
+
+def draw_point(points, img, width, height):
+    i = 0
+    for f in range(points.shape[0]):
+        i += 1
+        if i == 1:
+            if not np.isnan(points[f]):
+                cv2.circle(img, (int(points[f] * width), int(points[f + 1] * height)), 1, (255, 255, 255), -1)
+            i += 1
+        if i == 5:
+            i = 0
+
+def show_from_csv(df: pd.DataFrame, output_type="hands+pose", where_left="left"):
+    mp_drawing = mp.solutions.drawing_utils
+    if output_type == "full":
+        width = int(df["resolution_width"][0])
+        height = int(df["resolution_height"][0])
+        rows = int(df.shape[0])
+        fps = df["fps"][0]
+        face_p = df.loc[0:rows, "face_x0":"face_p467"].values
+        pose_p = df.loc[0:rows, "pose_x0":"pose_p31"].values
+        lhand_p = df.loc[0:rows, "lhand_x0":"lhand_p20"].values
+        rhand_p = df.loc[0:rows, "rhand_x0":"rhand_p20"].values
+        points_arr = [face_p, pose_p, lhand_p, rhand_p]
+        print(face_p.shape)
+        print(pose_p.shape)
+        print(lhand_p.shape)
+        print(rhand_p.shape)
+        mp_holistic = mp.solutions.holistic
+        if output_type == "full":
+            i = 0
+            for i in range(rows):
+
+                black = np.zeros((height, width, 3))
+                draw_point(points_arr[0][i], black, width, height)
+                draw_point(points_arr[1][i], black, width, height)
+                draw_point(points_arr[2][i], black, width, height)
+                draw_point(points_arr[3][i], black, width, height)
+                # black = cv2.resize(black, (400,400))
+                black = cv2.resize(black, (1280, 720))
+                if where_left == "right":
+                    cv2.imshow("black_full", cv2.flip(black, 1))
+                if where_left == "left":
+                    cv2.imshow("black_full", black)
+                key = cv2.waitKey(1)
+                time.sleep(1 / fps)
+                if key == ord("q"):
+                    break
+    if output_type == "hands+pose":
+        width = int(df["resolution_width"][0])
+        height = int(df["resolution_height"][0])
+        rows = int(df.shape[0])
+        fps = df["fps"][0]
+        pose_p = df.loc[0:rows, "pose_x0":"pose_p31"].values
+        lhand_p = df.loc[0:rows, "lhand_x0":"lhand_p20"].values
+        rhand_p = df.loc[0:rows, "rhand_x0":"rhand_p20"].values
+        points_arr = [pose_p, lhand_p, rhand_p]
+        # print(face_p.shape)
+        print(pose_p.shape)
+        print(lhand_p.shape)
+        print(rhand_p.shape)
+        mp_holistic = mp.solutions.holistic
+        if output_type == "hands+pose":
+            i = 0
+            for i in range(rows):
+
+                black = np.zeros((height, width, 3))
+                draw_point(points_arr[0][i], black, width, height)
+                draw_point(points_arr[1][i], black, width, height)
+                draw_point(points_arr[2][i], black, width, height)
+                # black = cv2.resize(black, (400,400))
+                black = cv2.resize(black, (1280, 720))
+                if where_left == "right":
+                    cv2.imshow("black_full", cv2.flip(black, 1))
+                if where_left == "left":
+                    cv2.imshow("black_full", black)
+                key = cv2.waitKey(1)
+                time.sleep(1 / fps)
+                if key == ord("q"):
+                    break
+cv2.destroyAllWindows()
+
+if __name__=="__main__":
+    PATH_CSV = ""
+    df = pd.read_csv("data/csv/12_s10020_9_1.mp4.csv")
+    show_from_csv(df)
