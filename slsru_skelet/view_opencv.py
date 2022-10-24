@@ -135,23 +135,27 @@ def show_from_csv(df: pd.DataFrame, output_type="hands+pose", where_left="left")
         height = int(df["resolution_height"][0])
         rows = int(df.shape[0])
         fps = df["fps"][0]
-        pose_p = df.loc[0:rows, "pose_x0":"pose_p31"].values
-        lhand_p = df.loc[0:rows, "lhand_x0":"lhand_p20"].values
-        rhand_p = df.loc[0:rows, "rhand_x0":"rhand_p20"].values
-        points_arr = [pose_p, lhand_p, rhand_p]
-        # print(face_p.shape)
+
+        np_column = df.columns.to_numpy()
+        print("df",[ n for n in np_column if "rhand" in n])
+
+        pose_p = df[[ n for n in np_column if "pose" in n]].values
+        lhand_p = df[[ n for n in np_column if "lhand" in n]].values
+        rhand_p = df[[ n for n in np_column if "rhand" in n]].values
+
         print(pose_p.shape)
         print(lhand_p.shape)
         print(rhand_p.shape)
-        mp_holistic = mp.solutions.holistic
+        print(np_column.shape)
+
         if output_type == "hands+pose":
             i = 0
             for i in range(rows):
 
                 black = np.zeros((height, width, 3))
-                draw_point(points_arr[0][i], black, width, height)
-                draw_point(points_arr[1][i], black, width, height)
-                draw_point(points_arr[2][i], black, width, height)
+                draw_point(pose_p[i], black, width, height)
+                draw_point(lhand_p[i], black, width, height)
+                draw_point(rhand_p[i], black, width, height)
                 # black = cv2.resize(black, (400,400))
                 black = cv2.resize(black, (1280, 720))
                 if where_left == "right":
@@ -162,9 +166,13 @@ def show_from_csv(df: pd.DataFrame, output_type="hands+pose", where_left="left")
                 time.sleep(1 / fps)
                 if key == ord("q"):
                     break
+            
+
 cv2.destroyAllWindows()
 
 if __name__=="__main__":
-    PATH_CSV = ""
-    df = pd.read_csv("data/csv/12_s10020_9_1.mp4.csv")
+    PATH_CSV = "data/csv/12_s10020_9_1.mp4.csv"
+    # PATH_CSV = "/home/yayay/yayay/git/github/gesture_interface/backend/data/test/csv/temp.csv"
+    # PATH_CSV = "/home/yayay/yayay/git/github/gesture_interface/backend/data/test/csv/to_temp.csv"
+    df = pd.read_csv(PATH_CSV)
     show_from_csv(df)
